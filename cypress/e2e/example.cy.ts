@@ -14,9 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-describe("My First Test", () => {
-  it("visits the app root url", () => {
-    cy.visit("/");
-    cy.contains("h1", "You did it!");
+describe("General-Service", () => {
+  it("Services", () => {
+    cy.visit("/", {
+      onLoad: () => {
+        cy.contains("span", "atest");
+      },
+    });
   });
 });

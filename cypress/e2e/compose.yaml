@@ -1,0 +1,45 @@
+version: '3.1'
+services:
+  testing:
+    build:
+      context: ../..
+      dockerfile: cypress/e2e/Dockerfile
+    environment:
+      - VITE_SW_PROXY_TARGET=http://skywalking:12800
+    depends_on:
+      atest:
+        condition: service_healthy
+      skywalking:
+        condition: service_healthy
+    volumes:
+      - /workspace/skywalking-booster-ui/bin:/workspace/cypress/videos
+  skywalking:
+    image: docker.io/apache/skywalking-oap-server:latest
+    ports:
+    - 12800:12800
+    healthcheck:
+      test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/12800"]
+      interval: 3s
+      timeout: 180s
+      retries: 10
+      start_period: 20s
+  atest:
+    image: linuxsuren/api-testing:v0.0.14
+    command:
+      - atest
+      - server
+    environment:
+      - SW_AGENT_REPORTER_GRPC_BACKEND_SERVICE=skywalking:11800
+      - SW_AGENT_METER_COLLECT_INTERVAL=1
+      - SW_AGENT_NAME=atest
+    depends_on:
+      skywalking:
+        condition: service_healthy
+    links:
+      - skywalking
+    healthcheck:
+      test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/8080"]
+      interval: 3s
+      timeout: 60s
+      retries: 10
+      start_period: 3s
